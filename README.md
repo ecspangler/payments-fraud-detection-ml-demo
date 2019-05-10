@@ -473,3 +473,218 @@ $ ks delete default -c payfraud-service-cpu
 $ ks delete default -c payfraud-gpu-v1
 $ ks delete default -c payfraud-service-gpu
 ```
+
+Expose routes for both services. We are using REST in this case, so expose port 8500/TCP for both services.
+
+Confirm that the services are accessible and serving as expected. By default, the most recent version of the trained model in the object store will be served, but this can be adjusted.
+
+
+# Service Status
+
+Request:
+GET <CPU serving route>/v1/models/payfraudcpu
+
+Response:
+```
+{
+    "model_version_status": [
+        {
+            "version": "1557304642",
+            "state": "AVAILABLE",
+            "status": {
+                "error_code": "OK",
+                "error_message": ""
+            }
+        }
+    ]
+}
+```
+
+Request:
+GET <GPU serving route>/v1/models/payfraudgpu
+
+Response:
+```
+{
+    "model_version_status": [
+        {
+            "version": "1557349851",
+            "state": "AVAILABLE",
+            "status": {
+                "error_code": "OK",
+                "error_message": ""
+            }
+        }
+    ]
+}
+```
+
+
+# Model Metadata
+
+Request:
+GET <CPU serving route>/v1/models/payfraudcpu/versions/1557304642/metadata
+
+Response:
+```
+{
+    "model_spec": {
+        "name": "payfraudcpu",
+        "signature_name": "",
+        "version": "1557304642"
+    },
+    "metadata": {
+        "signature_def": {
+            "signature_def": {
+                "serving_default": {
+                    "inputs": {
+                        "payments": {
+                            "dtype": "DT_FLOAT",
+                            "tensor_shape": {
+                                "dim": [
+                                    {
+                                        "size": "-1",
+                                        "name": ""
+                                    },
+                                    {
+                                        "size": "28",
+                                        "name": ""
+                                    }
+                                ],
+                                "unknown_rank": false
+                            },
+                            "name": "X_train:0"
+                        }
+                    },
+                    "outputs": {
+                        "classification": {
+                            "dtype": "DT_FLOAT",
+                            "tensor_shape": {
+                                "dim": [
+                                    {
+                                        "size": "-1",
+                                        "name": ""
+                                    },
+                                    {
+                                        "size": "2",
+                                        "name": ""
+                                    }
+                                ],
+                                "unknown_rank": false
+                            },
+                            "name": "Softmax:0"
+                        }
+                    },
+                    "method_name": "tensorflow/serving/predict"
+                }
+            }
+        }
+    }
+}
+```
+
+Request:
+GET <GPU serving route>/v1/models/payfraudgpu/versions/1557349851/metadata
+
+Response:
+```
+{
+    "model_spec": {
+        "name": "payfraudgpu",
+        "signature_name": "",
+        "version": "1557349851"
+    },
+    "metadata": {
+        "signature_def": {
+            "signature_def": {
+                "serving_default": {
+                    "inputs": {
+                        "payments": {
+                            "dtype": "DT_FLOAT",
+                            "tensor_shape": {
+                                "dim": [
+                                    {
+                                        "size": "-1",
+                                        "name": ""
+                                    },
+                                    {
+                                        "size": "28",
+                                        "name": ""
+                                    }
+                                ],
+                                "unknown_rank": false
+                            },
+                            "name": "X_train:0"
+                        }
+                    },
+                    "outputs": {
+                        "classification": {
+                            "dtype": "DT_FLOAT",
+                            "tensor_shape": {
+                                "dim": [
+                                    {
+                                        "size": "-1",
+                                        "name": ""
+                                    },
+                                    {
+                                        "size": "2",
+                                        "name": ""
+                                    }
+                                ],
+                                "unknown_rank": false
+                            },
+                            "name": "Softmax:0"
+                        }
+                    },
+                    "method_name": "tensorflow/serving/predict"
+                }
+            }
+        }
+    }
+}
+```
+
+
+# Prediction Service
+
+The below predictions requests are for fraudulent payments. The output gives the predicted value of non-fraud, and then the predicted value for the payment to be fraud.
+
+Request:
+POST <CPU serving route>/v1/models/payfraudcpu:predict
+```
+{
+  "inputs": [[0.005313,0.000000,0.000000,0.000000,0.000000,1.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,1.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,1.000000,0.000000]]
+}
+```
+
+Response:
+```
+{
+    "outputs": [
+        [
+            0.016938,
+            0.983062
+        ]
+    ]
+}
+```
+
+Request:
+POST <GPU serving route>/v1/models/payfraudgpu:predict
+```
+{
+  "inputs": [[0.005313,0.000000,0.000000,0.000000,0.000000,1.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,1.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,1.000000,0.000000]]
+}
+```
+
+Response:
+```
+{
+    "outputs": [
+        [
+            0.0109494,
+            0.989051
+        ]
+    ]
+}
+```
