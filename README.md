@@ -1,5 +1,5 @@
 # payments-fraud-detection-ml-demo
-
+ 
 The below demo setup instructions assume an OpenShift cluster with the Nvidia Device Plugin already installed.
 
 Nvidia Container Runtime:
